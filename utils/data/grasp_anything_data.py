@@ -51,7 +51,7 @@ class GraspAnythingDataset(GraspDatasetBase):
 
     def get_gtbb(self, idx, rot=0, zoom=1.0):       
         # Jacquard try
-        gtbbs = grasp.GraspRectangles.load_from_grasp_anything_file(self.grasp_files[idx], scale=self.output_size / 1024.0)
+        gtbbs = grasp.GraspRectangles.load_from_grasp_anything_file(self.grasp_files[idx], scale=self.output_size / 416.0)
 
         c = self.output_size // 2
         gtbbs.rotate(rot, (c, c))
