@@ -49,15 +49,16 @@ class GraspAnythingDataset(GraspDatasetBase):
         top = max(0, min(center[0] - self.output_size // 2, 480 - self.output_size))
         return center, left, top
 
-    def get_gtbb(self, idx, rot=0, zoom=1.0):
-        gtbbs = grasp.GraspRectangles.load_from_grasp_anything_file(self.grasp_files[idx])
-        
+    def get_gtbb(self, idx, rot=0, zoom=1.0):       
         # Jacquard try
+        gtbbs = grasp.GraspRectangles.load_from_grasp_anything_file(self.grasp_files[idx], scale=self.output_size / 1024.0)
+
         c = self.output_size // 2
         gtbbs.rotate(rot, (c, c))
         gtbbs.zoom(zoom, (c, c))
 
         # Cornell try
+        # gtbbs = grasp.GraspRectangles.load_from_grasp_anything_file(self.grasp_files[idx])
         # center, left, top = self._get_crop_attrs(idx)
         # gtbbs.rotate(rot, center)
         # gtbbs.offset((-top, -left))
