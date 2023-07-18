@@ -94,8 +94,6 @@ class GraspRectangles:
                     # Some files contain weird values.
                     continue
         
-        print(gr)
-        raise
         return cls(grs)
 
     @classmethod
