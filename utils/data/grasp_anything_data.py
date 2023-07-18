@@ -51,9 +51,13 @@ class GraspAnythingDataset(GraspDatasetBase):
 
     def get_gtbb(self, idx, rot=0, zoom=1.0):
         gtbbs = grasp.GraspRectangles.load_from_grasp_anything_file(self.grasp_files[idx])
+        
+        # Jacquard try
         c = self.output_size // 2
         gtbbs.rotate(rot, (c, c))
         gtbbs.zoom(zoom, (c, c))
+
+        # Cornell try
         # center, left, top = self._get_crop_attrs(idx)
         # gtbbs.rotate(rot, center)
         # gtbbs.offset((-top, -left))
@@ -78,12 +82,22 @@ class GraspAnythingDataset(GraspDatasetBase):
         rgb_img = image.Image.from_file(rgb_file)
         rgb_img = image.Image.mask_out_image(rgb_img, mask_img)
 
-        center, left, top = self._get_crop_attrs(idx)
-        rgb_img.rotate(rot, center)
-        rgb_img.crop((top, left), (min(480, top + self.output_size), min(640, left + self.output_size)))
+        # Jacquard try
+        rgb_img.rotate(rot)
         rgb_img.zoom(zoom)
         rgb_img.resize((self.output_size, self.output_size))
         if normalise:
             rgb_img.normalise()
             rgb_img.img = rgb_img.img.transpose((2, 0, 1))
         return rgb_img.img
+
+        # Cornell try
+        # center, left, top = self._get_crop_attrs(idx)
+        # rgb_img.rotate(rot, center)
+        # rgb_img.crop((top, left), (min(480, top + self.output_size), min(640, left + self.output_size)))
+        # rgb_img.zoom(zoom)
+        # rgb_img.resize((self.output_size, self.output_size))
+        # if normalise:
+        #     rgb_img.normalise()
+        #     rgb_img.img = rgb_img.img.transpose((2, 0, 1))
+        # return rgb_img.img
