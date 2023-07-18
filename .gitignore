@@ -109,3 +109,5 @@ results/
 saved_data/
 
 *.pyc
+
+data

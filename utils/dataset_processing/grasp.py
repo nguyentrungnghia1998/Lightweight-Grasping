@@ -1,3 +1,4 @@
+import torch
 import matplotlib.pyplot as plt
 import numpy as np
 from skimage.draw import polygon
@@ -13,6 +14,12 @@ def _gr_text_to_no(l, offset=(0, 0)):
     """
     x, y = l.split()
     return [int(round(float(y))) - offset[0], int(round(float(x))) - offset[1]]
+
+
+def _grasp_anything_format(grasp: list):
+    _, x, y, w, h, theta = grasp
+    # index based on row, column (y,x), and the Grasp-Anything dataset's angles are flipped around an axis.
+    return Grasp(np.array([y, x]), -theta / 180.0 * np.pi, w, h).as_gr
 
 
 class GraspRectangles:
@@ -86,6 +93,9 @@ class GraspRectangles:
                 except ValueError:
                     # Some files contain weird values.
                     continue
+        
+        print(gr)
+        raise
         return cls(grs)
 
     @classmethod
@@ -106,6 +116,22 @@ class GraspRectangles:
         grs.scale(scale)
         return grs
 
+    @classmethod
+    def load_from_grasp_anything_file(cls, fname, scale=1.0):
+        """
+        Load grasp rectangles from a Grasp-Anything dataset grasp file.
+        :param fname: Path to text file.
+        :return: GraspRectangles()
+        """
+        grs = None
+        with open(fname, 'rb') as f:
+            pos_grasps = torch.load(f).tolist()
+            grs = list(map(lambda x: _grasp_anything_format(x), pos_grasps))
+
+        grs = cls(grs)
+        grs.scale(scale)
+        return grs
+    
     def append(self, gr):
         """
         Add a grasp rectangle to this GraspRectangles object
