@@ -110,5 +110,5 @@ saved_data/
 
 *.pyc
 
-data
+data/*
 logs/
