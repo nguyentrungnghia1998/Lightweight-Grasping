@@ -30,7 +30,7 @@ class GraspAnythingDataset(GraspDatasetBase):
         with open(os.path.join(file_path, 'idxs.obj'), 'rb') as f:
             idxs = pickle.load(f)
 
-        self.grasp_files = list(filter(lambda x: x.splot('/')[-1].split('_')[0] in idxs, self.grasp_files))
+        self.grasp_files = list(filter(lambda x: x.split('/')[-1].split('_')[0] in idxs, self.grasp_files))
         self.grasp_files.sort()
         self.prompt_files.sort()
         self.rgb_files.sort()
