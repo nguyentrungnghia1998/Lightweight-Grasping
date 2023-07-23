@@ -77,7 +77,7 @@ def parse_args():
                         help='Force code to run in CPU mode')
     parser.add_argument('--random-seed', type=int, default=123,
                         help='Random seed for numpy')
-    parser.add_argument('--use-lvis-subset', type=int, default=1,
+    parser.add_argument('--use-lvis', type=int, default=1,
                         help='Flag for using LVIS subset, only work for Grasp-Anything dataset')
 
     args = parser.parse_args()
@@ -254,7 +254,8 @@ def run():
                       random_rotate=True,
                       random_zoom=True,
                       include_depth=args.use_depth,
-                      include_rgb=args.use_rgb)
+                      include_rgb=args.use_rgb,
+                      use_lvis=args.use_lvis)
     logging.info('Dataset size is {}'.format(dataset.length))
 
     # Creating data indices for training and validation splits

@@ -51,8 +51,8 @@ class GraspAnythingDataset(GraspDatasetBase):
     def _get_crop_attrs(self, idx):
         gtbbs = grasp.GraspRectangles.load_from_grasp_anything_file(self.grasp_files[idx])
         center = gtbbs.center
-        left = max(0, min(center[1] - self.output_size // 2, 640 - self.output_size))
-        top = max(0, min(center[0] - self.output_size // 2, 480 - self.output_size))
+        left = max(0, min(center[1] - self.output_size // 2, 416 - self.output_size))
+        top = max(0, min(center[0] - self.output_size // 2, 416 - self.output_size))
         return center, left, top
 
     def get_gtbb(self, idx, rot=0, zoom=1.0):       
