@@ -19,8 +19,7 @@ def _gr_text_to_no(l, offset=(0, 0)):
 def _grasp_anything_format(grasp: list):
     _, x, y, w, h, theta = grasp
     # index based on row, column (y,x), and the Grasp-Anything dataset's angles are flipped around an axis.
-    # return Grasp(np.array([y, x]), -theta / 180.0 * np.pi, w, h).as_gr
-    return Grasp(np.array([y, x]), theta / 180.0 * np.pi, w, h).as_gr
+    return Grasp(np.array([y, x]), -theta / 180.0 * np.pi, w, h).as_gr
 
 
 class GraspRectangles:
