@@ -77,6 +77,8 @@ def parse_args():
                         help='Force code to run in CPU mode')
     parser.add_argument('--random-seed', type=int, default=123,
                         help='Random seed for numpy')
+    parser.add_argument('--use-lvis-subset', type=int, default=1,
+                        help='Flag for using LVIS subset, only work for Grasp-Anything dataset')
 
     args = parser.parse_args()
     return args
