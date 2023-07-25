@@ -30,15 +30,13 @@ class GraspAnythingDataset(GraspDatasetBase):
         if kwargs["seen"]:
             with open(os.path.join('split/grasp-anything/seen.obj'), 'rb') as f:
                 idxs = pickle.load(f)
-            print(idxs, self.grasp_files[0].split('/')[-1])
-            raise
 
-            self.grasp_files = list(filter(lambda x: x.split('/')[-1] in idxs, self.grasp_files))
+            self.grasp_files = list(filter(lambda x: x.split('/')[-1].split('.')[0] in idxs, self.grasp_files))
         else:
             with open(os.path.join('split/grasp-anything/unseen.obj'), 'rb') as f:
                 idxs = pickle.load(f)
 
-            self.grasp_files = list(filter(lambda x: x.split('/')[-1] in idxs, self.grasp_files))
+            self.grasp_files = list(filter(lambda x: x.split('/')[-1].split('.')[0] in idxs, self.grasp_files))
 
         self.grasp_files.sort()
         self.prompt_files.sort()
