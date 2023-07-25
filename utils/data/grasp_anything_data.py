@@ -27,12 +27,17 @@ class GraspAnythingDataset(GraspDatasetBase):
         self.rgb_files = glob.glob(os.path.join(file_path, 'image', '*.jpg'))
         self.mask_files = glob.glob(os.path.join(file_path, 'mask', '*.npy'))
 
-        if kwargs["use_lvis"]:
-            with open(os.path.join(file_path, 'idxs.obj'), 'rb') as f:
+        if kwargs["seen"]:
+            with open(os.path.join(file_path, 'split/grasp-anything/seen.obj'), 'rb') as f:
                 idxs = pickle.load(f)
 
             self.grasp_files = list(filter(lambda x: x.split('/')[-1].split('_')[0] in idxs, self.grasp_files))
-        
+        else:
+            with open(os.path.join(file_path, 'split/grasp-anything/unseen.obj'), 'rb') as f:
+                idxs = pickle.load(f)
+
+            self.grasp_files = list(filter(lambda x: x.split('/')[-1].split('_')[0] in idxs, self.grasp_files))
+
         self.grasp_files.sort()
         self.prompt_files.sort()
         self.rgb_files.sort()
