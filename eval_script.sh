@@ -8,7 +8,8 @@ if [ ! -d "$folder_path" ]; then
     exit 1
 fi
 
-for file in "$folder_path"/*; do
+pattern="epoch_*"
+for file in "$folder_path"/$pattern; do
     if [ -f "$file" ]; then
         echo "Running command with file: $file"
         "$command" "$file"  # Execute the command with the file as a parameter
