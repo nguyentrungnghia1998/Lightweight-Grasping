@@ -92,7 +92,7 @@ class GraspAnythingDataset(GraspDatasetBase):
         rgb_file = re.sub(r"_\d{1}\.pt", ".jpg", self.grasp_files[idx])
         rgb_file = rgb_file.replace("positive_grasp", "image")
         rgb_img = image.Image.from_file(rgb_file)
-        # rgb_img = image.Image.mask_out_image(rgb_img, mask_img)
+        rgb_img = image.Image.mask_out_image(rgb_img, mask_img)
 
         # Jacquard try
         rgb_img.rotate(rot)
