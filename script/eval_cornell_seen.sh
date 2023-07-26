@@ -1,6 +1,5 @@
 #!/bin/bash
 
-command="python evaluate.py --dataset cornell --dataset-path data/cornell_seen/archive/ --iou-eval --use-depth 0 --seen 0 --split 0.80 --network"  # Replace 'your_command_here' with your actual command
 folder_path="$1"  # Replace '/path/to/your/folder' with the actual folder path
 
 if [ ! -d "$folder_path" ]; then
