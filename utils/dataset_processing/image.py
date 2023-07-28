@@ -36,9 +36,9 @@ class Image:
     def mask_out_image(cls, image, mask):
         # Apply the mask to the image
         masked_image = np.array(image)
-        masked_image[:, :, 0] = masked_image[:, :, 0] * mask + 255*(1-mask)
-        masked_image[:, :, 1] = masked_image[:, :, 1] * mask + 255*(1-mask)
-        masked_image[:, :, 2] = masked_image[:, :, 2] * mask + 255*(1-mask)
+        masked_image[:, :, 0] = masked_image[:, :, 0] * mask + np.random.randint(200, 255) * (1-mask)
+        masked_image[:, :, 1] = masked_image[:, :, 1] * mask + np.random.randint(200, 255) * (1-mask)
+        masked_image[:, :, 2] = masked_image[:, :, 2] * mask + np.random.randint(200, 255) * (1-mask)
 
         return cls(imageio.core.util.Array(masked_image))
 
