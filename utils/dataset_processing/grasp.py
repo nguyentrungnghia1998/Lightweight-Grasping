@@ -124,10 +124,11 @@ class GraspRectangles:
         grs = None
         with open(fname, 'rb') as f:
             pos_grasps = torch.load(f)
-        add_fn = fname.replace("positive_grasp", "negative_grasp")
-        with open(fname, 'rb') as f:
-            neg_grasps = torch.load(f)
-        grasps = torch.cat((pos_grasps, neg_grasps), dim=0).tolist()
+        # add_fn = fname.replace("positive_grasp", "negative_grasp")
+        # with open(fname, 'rb') as f:
+        #     neg_grasps = torch.load(f)
+        # grasps = torch.cat((pos_grasps, neg_grasps), dim=0).tolist()
+        grasps = pos_grasps.tolist()
         grs = list(map(lambda x: _grasp_anything_format(x), grasps))
 
         grs = cls(grs)
