@@ -218,6 +218,7 @@ class DetectionAlgoFPN(DetectionAlgo):
             
             boxes, scores = self._split_and_clip(boxes, scores, proposals_idx, valid_size)
             bbx_pred, cls_pred, obj_pred = self.prediction_generator(boxes, scores)
+            end = time.time()
         else:
             # active_group(False)
             bbx_pred = PackedSequence([None for _ in range(x[0].size(0))])

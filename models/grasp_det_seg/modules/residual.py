@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import torch.nn as nn
 import torch.nn.functional as functional
-from inplace_abn import ABN
+# from inplace_abn import ABN
 
 
 class ResidualBlock(nn.Module):
@@ -35,7 +35,7 @@ class ResidualBlock(nn.Module):
                  stride=1,
                  dilation=1,
                  groups=1,
-                 norm_act=ABN,
+                 norm_act=nn.BatchNorm2d,
                  dropout=None):
         super(ResidualBlock, self).__init__()
 
@@ -62,14 +62,14 @@ class ResidualBlock(nn.Module):
             if dropout is not None:
                 layers = layers[0:2] + [("dropout", dropout())] + layers[2:]
         else:
-            bn3 = norm_act(channels[2])
-            bn3.activation = "identity"
+            bn3 = nn.BatchNorm2d(channels[2])
+            # bn3.activation = "identity"
             layers = [
                 ("conv1", nn.Conv2d(in_channels, channels[0], 1, stride=1, padding=0, bias=False)),
-                ("bn1", norm_act(channels[0])),
+                ("bn1", nn.BatchNorm2d(channels[0])),
                 ("conv2", nn.Conv2d(channels[0], channels[1], 3, stride=stride, padding=dilation, bias=False,
                                     groups=groups, dilation=dilation)),
-                ("bn2", norm_act(channels[1])),
+                ("bn2", nn.BatchNorm2d(channels[1])),
                 ("conv3", nn.Conv2d(channels[1], channels[2], 1, stride=1, padding=0, bias=False)),
                 ("bn3", bn3)
             ]
@@ -79,7 +79,7 @@ class ResidualBlock(nn.Module):
 
         if need_proj_conv:
             self.proj_conv = nn.Conv2d(in_channels, channels[-1], 1, stride=stride, padding=0, bias=False)
-            self.proj_bn = norm_act(channels[-1])
+            self.proj_bn = nn.BatchNorm2d(channels[-1])
             self.proj_bn.activation = "identity"
 
     def forward(self, x):
@@ -91,13 +91,15 @@ class ResidualBlock(nn.Module):
 
         x = self.convs(x) + residual
 
-        if self.convs.bn1.activation == "relu":
-            return functional.relu(x, inplace=True)
-        elif self.convs.bn1.activation == "leaky_relu":
-            return functional.leaky_relu(x, negative_slope=self.convs.bn1.activation_param, inplace=True)
-        elif self.convs.bn1.activation == "elu":
-            return functional.elu(x, alpha=self.convs.bn1.activation_param, inplace=True)
-        elif self.convs.bn1.activation == "identity":
-            return x
-        else:
-            raise RuntimeError("Unknown activation function {}".format(self.activation))
+        return x
+
+        # if self.convs.bn1.activation == "relu":
+        #     return functional.relu(x, inplace=True)
+        # elif self.convs.bn1.activation == "leaky_relu":
+        #     return functional.leaky_relu(x, negative_slope=self.convs.bn1.activation_param, inplace=True)
+        # elif self.convs.bn1.activation == "elu":
+        #     return functional.elu(x, alpha=self.convs.bn1.activation_param, inplace=True)
+        # elif self.convs.bn1.activation == "identity":
+        #     return x
+        # else:
+        #     raise RuntimeError("Unknown activation function {}".format(self.activation))

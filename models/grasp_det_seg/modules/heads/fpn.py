@@ -3,21 +3,21 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torch.nn.functional as functional
-from inplace_abn import ABN
+# from inplace_abn import ABN
 from models.grasp_det_seg.utils.misc import try_index
 
 class FPNROIHead(nn.Module):
     """ROI head module for FPN
     """
 
-    def __init__(self, in_channels, classes, roi_size, hidden_channels=1024, norm_act=ABN):
+    def __init__(self, in_channels, classes, roi_size, hidden_channels=1024, norm_act=nn.BatchNorm2d):
         super(FPNROIHead, self).__init__()
 
         self.fc = nn.Sequential(OrderedDict([
             ("fc1", nn.Linear(int(roi_size[0] * roi_size[1] * in_channels / 4), hidden_channels, bias=False)),
-            ("bn1", norm_act(hidden_channels)),
+            ("bn1",nn.BatchNorm1d(hidden_channels)),
             ("fc2", nn.Linear(hidden_channels, hidden_channels, bias=False)),
-            ("bn2", norm_act(hidden_channels))
+            ("bn2", nn.BatchNorm1d(hidden_channels))
         ]))
         self.roi_cls = nn.Linear(hidden_channels, classes["thing"] + 1)
         self.roi_bbx = nn.Linear(hidden_channels, classes["thing"] * 4)
@@ -25,7 +25,7 @@ class FPNROIHead(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        gain = nn.init.calculate_gain(self.fc.bn1.activation, self.fc.bn1.activation_param)
+        gain = nn.init.calculate_gain("relu", self.fc.bn1.weight)
 
         for name, mod in self.named_modules():
             if isinstance(mod, nn.Linear):
@@ -35,7 +35,7 @@ class FPNROIHead(nn.Module):
                     nn.init.xavier_normal_(mod.weight, .001)
                 else:
                     nn.init.xavier_normal_(mod.weight, gain)
-            elif isinstance(mod, ABN):
+            elif isinstance(mod, nn.BatchNorm2d):
                 nn.init.constant_(mod.weight, 1.)
 
             if hasattr(mod, "bias") and mod.bias is not None:
@@ -61,10 +61,10 @@ class FPNSemanticHeadDeeplab(nn.Module):
             self.conv1_3x3 = nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False)
             self.conv1_dil = nn.Conv2d(in_channels, out_channels, 3, dilation=dilation, padding=dilation, bias=False)
             self.conv1_glb = nn.Conv2d(in_channels, out_channels, 1, bias=False)
-            self.bn1 = norm_act(out_channels * 3)
+            self.bn1 = nn.BatchNorm2d(out_channels * 3)
 
             self.conv2 = nn.Conv2d(out_channels * 3, out_channels, 1, bias=False)
-            self.bn2 = norm_act(out_channels)
+            self.bn2 = nn.BatchNorm2d(out_channels)
 
         def _global_pooling(self, x):
             pooling_size = (min(try_index(self.pooling_size, 0), x.shape[2]),
@@ -99,7 +99,7 @@ class FPNSemanticHeadDeeplab(nn.Module):
                  hidden_channels=128,
                  dilation=6,
                  pooling_size=(64, 64),
-                 norm_act=ABN,
+                 norm_act=nn.BatchNorm2d,
                  interpolation="bilinear"):
         super(FPNSemanticHeadDeeplab, self).__init__()
         self.min_level = min_level
@@ -114,14 +114,14 @@ class FPNSemanticHeadDeeplab(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        gain = nn.init.calculate_gain(self.output[0].bn1.activation, self.output[0].bn1.activation_param)
+        gain = nn.init.calculate_gain("relu", self.output[0].bn1.weight)
         for name, mod in self.named_modules():
             if isinstance(mod, nn.Conv2d):
                 if "conv_sem" not in name:
                     nn.init.xavier_normal_(mod.weight, gain)
                 else:
                     nn.init.xavier_normal_(mod.weight, .1)
-            elif isinstance(mod, ABN):
+            elif isinstance(mod, nn.BatchNorm2d):
                 nn.init.constant_(mod.weight, 1.)
             if hasattr(mod, "bias") and mod.bias is not None:
                 nn.init.constant_(mod.bias, 0.)

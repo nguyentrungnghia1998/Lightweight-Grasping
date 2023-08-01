@@ -5,12 +5,12 @@ from functools import partial
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-from inplace_abn import InPlaceABN, InPlaceABNSync, ABN
+# from inplace_abn import InPlaceABN, InPlaceABNSync, ABN
 
 from models.grasp_det_seg.modules.misc import ActivatedAffine, ActivatedGroupNorm
 from . import scheduler as lr_scheduler
 
-NORM_LAYERS = [ABN, nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d, nn.GroupNorm]
+NORM_LAYERS = [nn.BatchNorm2d, nn.BatchNorm2d, nn.BatchNorm2d, nn.BatchNorm2d, nn.GroupNorm]
 OTHER_LAYERS = [nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d, nn.ConvTranspose1d, nn.ConvTranspose2d, nn.ConvTranspose3d]
 
 
@@ -106,17 +106,17 @@ def norm_act_from_config(body_config):
     groups = body_config.getint("gn_groups")
 
     if mode == "bn":
-        norm_act_static = norm_act_dynamic = partial(InPlaceABN, activation=activation, activation_param=slope)
+        norm_act_static = norm_act_dynamic = partial(nn.BatchNorm2d, activation=activation, activation_param=slope)
     elif mode == "syncbn":
-        norm_act_static = norm_act_dynamic = partial(InPlaceABNSync, activation=activation, activation_param=slope)
+        norm_act_static = norm_act_dynamic = partial(nn.BatchNorm2d, activation=activation, activation_param=slope)
     elif mode == "syncbn+bn":
-        norm_act_static = partial(InPlaceABNSync, activation=activation, activation_param=slope)
-        norm_act_dynamic = partial(InPlaceABN, activation=activation, activation_param=slope)
+        norm_act_static = partial(nn.BatchNorm2d, activation=activation, activation_param=slope)
+        norm_act_dynamic = partial(nn.BatchNorm2d, activation=activation, activation_param=slope)
     elif mode == "gn":
         norm_act_static = norm_act_dynamic = partial(
             ActivatedGroupNorm, num_groups=groups, activation=activation, activation_param=slope)
     elif mode == "syncbn+gn":
-        norm_act_static = partial(InPlaceABNSync, activation=activation, activation_param=slope)
+        norm_act_static = partial(nn.BatchNorm2d, activation=activation, activation_param=slope)
         norm_act_dynamic = partial(ActivatedGroupNorm, num_groups=groups, activation=activation, activation_param=slope)
     elif mode == "off":
         norm_act_static = norm_act_dynamic = partial(ActivatedAffine, activation=activation, activation_param=slope)

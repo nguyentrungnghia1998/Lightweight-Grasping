@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as functional
 
-from inplace_abn import ABN
+# from inplace_abn import ABN
 
 
 class GlobalAvgPool2d(nn.Module):
@@ -30,7 +30,7 @@ class Interpolate(nn.Module):
         return functional.interpolate(x, self.size, self.scale_factor, self.mode, self.align_corners)
 
 
-class ActivatedAffine(ABN):
+class ActivatedAffine(nn.BatchNorm2d):
     """Drop-in replacement for ABN which performs inference-mode BN + activation"""
 
     def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True, activation="leaky_relu",
@@ -71,7 +71,7 @@ class ActivatedAffine(ABN):
             raise RuntimeError("Unknown activation function {}".format(self.activation))
 
 
-class ActivatedGroupNorm(ABN):
+class ActivatedGroupNorm(nn.BatchNorm2d):
     """GroupNorm + activation function compatible with the ABN interface"""
 
     def __init__(self, num_channels, num_groups, eps=1e-5, affine=True, activation="leaky_relu", activation_param=0.01):

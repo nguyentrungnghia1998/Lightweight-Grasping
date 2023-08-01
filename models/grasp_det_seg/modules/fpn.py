@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import torch.nn as nn
 import torch.nn.functional as functional
-from inplace_abn import ABN
+# from inplace_abn import ABN
 
 
 class FPN(nn.Module):
@@ -22,7 +22,7 @@ class FPN(nn.Module):
         Interpolation mode to use when up-sampling, see `torch.nn.functional.interpolate`
     """
 
-    def __init__(self, in_channels, out_channels=256, extra_scales=0, norm_act=ABN, interpolation="nearest"):
+    def __init__(self, in_channels, out_channels=256, extra_scales=0, norm_act=nn.BatchNorm2d, interpolation="nearest"):
         super(FPN, self).__init__()
         self.interpolation = interpolation
 
@@ -43,11 +43,11 @@ class FPN(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        gain = nn.init.calculate_gain(self.lateral[0].bn.activation, self.lateral[0].bn.activation_param)
+        gain = nn.init.calculate_gain("relu", self.lateral[0].bn.weight)
         for mod in self.modules():
             if isinstance(mod, nn.Conv2d):
                 nn.init.xavier_normal_(mod.weight, gain)
-            elif isinstance(mod, ABN):
+            elif isinstance(mod, nn.BatchNorm2d):
                 nn.init.constant_(mod.weight, 1.)
             if hasattr(mod, "bias") and mod.bias is not None:
                 nn.init.constant_(mod.bias, 0.)
@@ -56,14 +56,14 @@ class FPN(nn.Module):
     def _make_lateral(input_channels, hidden_channels, norm_act):
         return nn.Sequential(OrderedDict([
             ("conv", nn.Conv2d(input_channels, hidden_channels, 1, bias=False)),
-            ("bn", norm_act(hidden_channels))
+            ("bn", nn.BatchNorm2d(hidden_channels))
         ]))
 
     @staticmethod
     def _make_output(channels, norm_act):
         return nn.Sequential(OrderedDict([
             ("conv", nn.Conv2d(channels, channels, 3, padding=1, bias=False)),
-            ("bn", norm_act(channels))
+            ("bn", nn.BatchNorm2d(channels))
         ]))
 
     @staticmethod

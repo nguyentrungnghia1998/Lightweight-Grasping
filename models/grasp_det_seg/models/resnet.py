@@ -3,7 +3,7 @@ from collections import OrderedDict
 from functools import partial
 
 import torch.nn as nn
-from inplace_abn import ABN
+# from inplace_abn import ABN
 
 from models.grasp_det_seg.modules.misc import GlobalAvgPool2d
 from models.grasp_det_seg.modules.residual import ResidualBlock
@@ -36,7 +36,7 @@ class ResNet(nn.Module):
     def __init__(self,
                  structure,
                  bottleneck,
-                 norm_act=ABN,
+                 norm_act=nn.BatchNorm2d,
                  classes=0,
                  dilation=1,
                  dropout=None,
@@ -56,7 +56,7 @@ class ResNet(nn.Module):
         # Initial layers
         layers = [
             ("conv1", nn.Conv2d(3, 64, 7, stride=2, padding=3, bias=caffe_mode)),
-            ("bn1", try_index(norm_act, 0)(64))
+            ("bn1", nn.BatchNorm2d(64))
         ]
         if try_index(dilation, 0) == 1:
             layers.append(("pool1", nn.MaxPool2d(3, stride=2, padding=1)))
@@ -80,7 +80,7 @@ class ResNet(nn.Module):
                 stride, dil = self._stride_dilation(dilation, mod_id, block_id)
                 blocks.append((
                     "block%d" % (block_id + 1),
-                    ResidualBlock(in_channels, channels, norm_act=try_index(norm_act, mod_id),
+                    ResidualBlock(in_channels, channels, norm_act=norm_act,
                                   stride=stride, dilation=dil, dropout=mod_dropout)
                 ))
 
