@@ -1,5 +1,5 @@
 import torch
-from inplace_abn import active_group, set_active_group
+# from inplace_abn import active_group, set_active_group
 
 from models.grasp_det_seg.utils.bbx import shift_boxes
 from models.grasp_det_seg.utils.misc import Empty
@@ -186,14 +186,14 @@ class DetectionAlgoFPN(DetectionAlgo):
                 raise Empty
 
             # Run head
-            set_active_group(head, active_group(True))
+            # set_active_group(head, active_group(True))
             proposals, proposals_idx = proposals.contiguous
             cls_logits, bbx_logits = self._head(head, x, proposals, proposals_idx, img_size)
 
             # Calculate loss
             cls_loss, bbx_loss = self.loss(cls_logits, bbx_logits, cls_lbl, bbx_lbl)
         except Empty:
-            active_group(False)
+            # active_group(False)
             cls_loss = bbx_loss = sum(x_i.sum() for x_i in x) * 0
 
         return cls_loss, bbx_loss
