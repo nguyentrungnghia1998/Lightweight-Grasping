@@ -203,7 +203,7 @@ class DetectionAlgoFPN(DetectionAlgo):
 
         if not proposals.all_none:
             # Run head on the given proposals
-            set_active_group(head, active_group(True))
+            # set_active_group(head, active_group(True))
             proposals, proposals_idx = proposals.contiguous
             cls_logits, bbx_logits = self._head(head, x, proposals, proposals_idx, img_size)
             
@@ -218,7 +218,6 @@ class DetectionAlgoFPN(DetectionAlgo):
             
             boxes, scores = self._split_and_clip(boxes, scores, proposals_idx, valid_size)
             bbx_pred, cls_pred, obj_pred = self.prediction_generator(boxes, scores)
-            end = time.time()
         else:
             # active_group(False)
             bbx_pred = PackedSequence([None for _ in range(x[0].size(0))])
