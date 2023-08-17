@@ -97,6 +97,34 @@ class GraspRectangles:
         return cls(grs)
 
     @classmethod
+    def load_from_vmrd_file(cls, fname):
+        """
+        Load grasp rectangles from a VMRD dataset grasp file.
+        :param fname: Path to text file.
+        :return: GraspRectangles()
+        """
+        grs = []
+        with open(fname) as f:
+            grasp_lines = f.readlines()
+            for grasp_line in grasp_lines:
+                x1, y1, x2, y2, x3, y3, x4, y4 = list(map(lambda x: int(round(float(x))), grasp_line.split(' ')[:8]))
+                try:
+                    gr = np.array([
+                        [x1, y1],
+                        [x2, y2],
+                        [x3, y3],
+                        [x4, y4],
+                    ])
+
+                    grs.append(GraspRectangle(gr))
+
+                except ValueError:
+                    # Some files contain weird values.
+                    continue
+        
+        return cls(grs)
+
+    @classmethod
     def load_from_jacquard_file(cls, fname, scale=1.0):
         """
         Load grasp rectangles from a Jacquard dataset file.
