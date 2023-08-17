@@ -107,7 +107,8 @@ class GraspRectangles:
         with open(fname) as f:
             grasp_lines = f.readlines()
             for grasp_line in grasp_lines:
-                x1, y1, x2, y2, x3, y3, x4, y4 = list(map(lambda x: int(round(float(x))), grasp_line.split(' ')[:8]))
+                # x1, y1, x2, y2, x3, y3, x4, y4 = list(map(lambda x: int(round(float(x))), grasp_line.split(' ')[:8]))
+                y1, x1, y2, x2, y3, x3, y4, x4 = list(map(lambda x: int(round(float(x))), grasp_line.split(' ')[:8]))
                 try:
                     gr = np.array([
                         [x1, y1],
