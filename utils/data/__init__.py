@@ -11,5 +11,8 @@ def get_dataset(dataset_name):
     elif dataset_name == 'vmrd':
         from .vmrd_data import VMRDDataset
         return VMRDDataset
+    elif dataset_name == 'ocid':
+        from .ocid_grasp_data import OCIDGraspDataset
+        return OCIDGraspDataset
     else:
         raise NotImplementedError('Dataset Type {} is Not implemented'.format(dataset_name))

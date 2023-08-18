@@ -97,6 +97,37 @@ class GraspRectangles:
         return cls(grs)
 
     @classmethod
+    def load_from_ocid_grasp_file(cls, fname):
+        """
+        Load grasp rectangles from a Cornell dataset grasp file.
+        :param fname: Path to text file.
+        :return: GraspRectangles()
+        """
+        grs = []
+        with open(fname) as f:
+            while True:
+                # Load 4 lines at a time, corners of bounding box.
+                p0 = f.readline()
+                if not p0:
+                    break  # EOF
+                p1, p2, p3 = f.readline(), f.readline(), f.readline()
+                try:
+                    gr = np.array([
+                        _gr_text_to_no(p0),
+                        _gr_text_to_no(p1),
+                        _gr_text_to_no(p2),
+                        _gr_text_to_no(p3)
+                    ])
+
+                    grs.append(GraspRectangle(gr))
+
+                except ValueError:
+                    # Some files contain weird values.
+                    continue
+        
+        return cls(grs)
+
+    @classmethod
     def load_from_vmrd_file(cls, fname):
         """
         Load grasp rectangles from a VMRD dataset grasp file.
