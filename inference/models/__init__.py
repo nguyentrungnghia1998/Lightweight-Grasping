@@ -16,5 +16,8 @@ def get_network(network_name):
     elif network_name == 'grconvnet4':
         from .grconvnet4 import GenerativeResnet
         return GenerativeResnet
+    elif network_name == 'ragt':
+        from .ragt.ragt import RAGT
+        return RAGT
     else:
         raise NotImplementedError('Network {} is not implemented'.format(network_name))
