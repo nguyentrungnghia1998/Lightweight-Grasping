@@ -19,5 +19,8 @@ def get_network(network_name):
     elif network_name == 'ragt':
         from .ragt.ragt import RAGT
         return RAGT
+    elif network_name == 'ggcnn':
+        from .ggcnn import GGCNN
+        return GGCNN
     else:
         raise NotImplementedError('Network {} is not implemented'.format(network_name))
