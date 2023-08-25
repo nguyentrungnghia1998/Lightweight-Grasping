@@ -1,18 +1,4 @@
 # Antipodal Robotic Grasping
-## Requirements
-
-- numpy
-- opencv-python
-- matplotlib
-- scikit-image
-- imageio
-- torch
-- torchvision
-- torchsummary
-- tensorboardX
-- pyrealsense2
-- Pillow
-
 ## Installation
 - Checkout the robotic grasping package
 ```bash
