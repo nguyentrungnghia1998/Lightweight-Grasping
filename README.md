@@ -37,3 +37,11 @@ $ pip install -r requirements.txt
 ```
 
 ## Weights
+- All weights are stored at `weights/model_<dataset>`.
+
+## Inference example
+- An atom example is shown in `run_robotic_exp.py`. To run this file:
+
+```bash
+$ python run_robotic_exp.py --weight weights/model_<dataset>
+```
