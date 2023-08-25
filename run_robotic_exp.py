@@ -63,6 +63,7 @@ def main():
 
     # Sample input
     x = torch.rand(1, 3, 224, 224).cuda()
-    print(net(x))
+    pos_pred, cos_pred, sin_pred, width_pred = net(x)
+    print(pos_pred.shape, cos_pred.shape, sin_pred.shape, width_pred.shape)
 
 main()
