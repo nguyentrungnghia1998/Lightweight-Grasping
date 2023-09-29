@@ -3,10 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import clip
 
-from inference.models.grasp_model import GraspModel, ResidualBlock
+from inference.models.grasp_model import LanguageGraspModel, ResidualBlock
 
 
-class GenerativeResnet(GraspModel):
+class GenerativeResnet(LanguageGraspModel):
 
     def __init__(self, input_channels=4, output_channels=1, channel_size=32, dropout=False, prob=0.0, clip_version='ViT-B/32'):
         super(GenerativeResnet, self).__init__()
@@ -35,6 +35,15 @@ class GenerativeResnet(GraspModel):
 
         self.conv6 = nn.ConvTranspose2d(channel_size, channel_size, kernel_size=9, stride=1, padding=4)
 
+        self.y_flatten = nn.Sequential(
+            nn.Linear(512, 256),
+            nn.GELU(),
+            nn.Linear(256, 128),
+            nn.GELU(),
+            nn.Linear(128, 56),
+            nn.GELU()
+        )
+
         self.pos_output = nn.Conv2d(in_channels=channel_size, out_channels=output_channels, kernel_size=2)
         self.cos_output = nn.Conv2d(in_channels=channel_size, out_channels=output_channels, kernel_size=2)
         self.sin_output = nn.Conv2d(in_channels=channel_size, out_channels=output_channels, kernel_size=2)
@@ -54,7 +63,7 @@ class GenerativeResnet(GraspModel):
             if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
                 nn.init.xavier_uniform_(m.weight, gain=1)
 
-    def forward(self, x_in, y=''):
+    def forward(self, x_in, prompt, query):
         x = F.relu(self.bn1(self.conv1(x_in)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
@@ -63,10 +72,20 @@ class GenerativeResnet(GraspModel):
         x = self.res3(x)
         x = self.res4(x)
         x = self.res5(x)
+
+        # Encode text
+        device = x.device
+        y_feats = self._encode_text(query, device=device)
+        y_feats = self.y_flatten(y_feats)
+        y_feats = y_feats.unsqueeze(2).expand(-1, -1, 56).unsqueeze(1).expand(-1, 128, -1, -1)
+         
+        # Combine textual features with the visual features
+        x = torch.clone(x).detach() + y_feats
+        
         x = F.relu(self.bn4(self.conv4(x)))
         x = F.relu(self.bn5(self.conv5(x)))
         x = self.conv6(x)
-
+        
         if self.dropout:
             pos_output = self.pos_output(self.dropout_pos(x))
             cos_output = self.cos_output(self.dropout_cos(x))
@@ -78,7 +97,6 @@ class GenerativeResnet(GraspModel):
             sin_output = self.sin_output(x)
             width_output = self.width_output(x)
 
-        y_feat = self._encode_text(y)
         return pos_output, cos_output, sin_output, width_output
 
     def _load_and_freeze_clip(self, clip_version, device=None):
@@ -94,9 +112,8 @@ class GenerativeResnet(GraspModel):
 
         return clip_model
 
-    def _encode_text(self, raw_text):
+    def _encode_text(self, raw_text, device=None):
         # raw_text - list (batch_size length) of strings with input text prompts
-        device = self.device
         max_text_len = 20 # Specific hardcoding for humanml dataset
         if max_text_len is not None:
             default_context_length = 77
@@ -108,4 +125,4 @@ class GenerativeResnet(GraspModel):
             # print('texts after pad', texts.shape, texts)
         else:
             texts = clip.tokenize(raw_text, truncate=True).to(device) # [bs, context_length] # if n_tokens > 77 -> will truncate
-        return self.clip_model.encode_text(texts).float()
+        return self.lang_model.encode_text(texts).float()

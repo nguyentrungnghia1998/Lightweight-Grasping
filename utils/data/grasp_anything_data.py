@@ -6,10 +6,10 @@ import pickle
 import torch
 
 from utils.dataset_processing import grasp, image, mask
-from .grasp_data import GraspDatasetBase
+from .language_grasp_data import LanguageGraspDatasetBase
 
 
-class GraspAnythingDataset(GraspDatasetBase):
+class GraspAnythingDataset(LanguageGraspDatasetBase):
     """
     Dataset wrapper for the Grasp-Anything dataset.
     """
@@ -113,3 +113,14 @@ class GraspAnythingDataset(GraspDatasetBase):
         #     rgb_img.normalise()
         #     rgb_img.img = rgb_img.img.transpose((2, 0, 1))
         # return rgb_img.img
+
+    def get_prompts(self, idx):
+        prompt_file, obj_id = self.grasp_files[idx].replace("positive_grasp", "prompt").split('_')
+        prompt_file += '.pkl'
+        obj_id = int(obj_id.split('.')[0])
+
+        with open(prompt_file, 'rb') as f:
+            x = pickle.load(f)
+            prompt, queries = x
+
+        return prompt, queries[obj_id]

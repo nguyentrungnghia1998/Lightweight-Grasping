@@ -47,6 +47,50 @@ class GraspModel(nn.Module):
             'width': width_pred
         }
 
+class LanguageGraspModel(nn.Module):
+    """
+    An abstract model for grasp network in a common format.
+    """
+
+    def __init__(self):
+        super(LanguageGraspModel, self).__init__()
+
+    def forward(self, x_in):
+        raise NotImplementedError()
+
+    def compute_loss(self, xc, yc, prompt, query):
+        y_pos, y_cos, y_sin, y_width = yc
+        pos_pred, cos_pred, sin_pred, width_pred = self(xc, prompt, query)
+
+        p_loss = F.smooth_l1_loss(pos_pred, y_pos)
+        cos_loss = F.smooth_l1_loss(cos_pred, y_cos)
+        sin_loss = F.smooth_l1_loss(sin_pred, y_sin)
+        width_loss = F.smooth_l1_loss(width_pred, y_width)
+
+        return {
+            'loss': p_loss + cos_loss + sin_loss + width_loss,
+            'losses': {
+                'p_loss': p_loss,
+                'cos_loss': cos_loss,
+                'sin_loss': sin_loss,
+                'width_loss': width_loss
+            },
+            'pred': {
+                'pos': pos_pred,
+                'cos': cos_pred,
+                'sin': sin_pred,
+                'width': width_pred
+            }
+        }
+
+    def predict(self, xc):
+        pos_pred, cos_pred, sin_pred, width_pred = self(xc)
+        return {
+            'pos': pos_pred,
+            'cos': cos_pred,
+            'sin': sin_pred,
+            'width': width_pred
+        }
 
 class ResidualBlock(nn.Module):
     """

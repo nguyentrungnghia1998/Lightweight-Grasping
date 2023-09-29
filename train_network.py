@@ -107,7 +107,7 @@ def validate(net, device, val_data, iou_threshold):
     ld = len(val_data)
 
     with torch.no_grad():
-        for x, y, didx, rot, zoom_factor in val_data:
+        for x, y, didx, rot, zoom_factor, prompt, query in val_data:
             xc = x.to(device)
             yc = [yy.to(device) for yy in y]
             lossd = net.compute_loss(xc, yc)
@@ -162,14 +162,14 @@ def train(epoch, net, device, train_data, optimizer, batches_per_epoch, vis=Fals
     batch_idx = 0
     # Use batches per epoch to make training on different sized datasets (cornell/jacquard) more equivalent.
     while batch_idx <= batches_per_epoch:
-        for x, y, _, _, _ in train_data:
+        for x, y, _, _, _, prompt, query in train_data:
             batch_idx += 1
             if batch_idx >= batches_per_epoch:
                 break
 
             xc = x.to(device)
             yc = [yy.to(device) for yy in y]
-            lossd = net.compute_loss(xc, yc)
+            lossd = net.compute_loss(xc, yc, prompt, query)
 
             loss = lossd['loss']
 
