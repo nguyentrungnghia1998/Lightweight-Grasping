@@ -110,7 +110,7 @@ def validate(net, device, val_data, iou_threshold):
         for x, y, didx, rot, zoom_factor, prompt, query in val_data:
             xc = x.to(device)
             yc = [yy.to(device) for yy in y]
-            lossd = net.compute_loss(xc, yc)
+            lossd = net.compute_loss(xc, yc, prompt, query)
 
             loss = lossd['loss']
 
