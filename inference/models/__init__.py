@@ -31,5 +31,8 @@ def get_network(network_name):
     elif network_name == 'lragt':
         from .ragt.ragt import LRAGT
         return LRAGT
+    elif network_name == 'clipfusion':
+        from .clipfusion import CLIPFusion
+        return CLIPFusion
     else:
         raise NotImplementedError('Network {} is not implemented'.format(network_name))

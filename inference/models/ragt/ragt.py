@@ -33,6 +33,12 @@ class RAGT(GraspModel):
         for m in self.modules():
             if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
                 nn.init.xavier_uniform_(m.weight, gain=1)
+    
+    def get_predicted_grasp(self, x_in):
+        x = self.mobile_vit(x_in)
+        x = self.upsample_layers(x)
+        
+        return x
 
     def forward(self, x_in):
         x = self.mobile_vit(x_in)
