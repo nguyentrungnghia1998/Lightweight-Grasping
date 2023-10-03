@@ -182,7 +182,7 @@ class CLIPFusion(LanguageGraspModel):
             if predicted_grasps.data.shape[0] > 0:
                 l.append(predicted_grasps[0].unsqueeze(0).unsqueeze(0))
             else:
-                l.append(torch.rand(1, 1, 5).cuda())
+                l.append(torch.zeros(1, 1, 5).cuda())
         predicted_grasps = torch.cat(l, dim=0)
         batch_size, num_grasps, _ = predicted_grasps.data.shape
 
