@@ -73,9 +73,6 @@ class GenerativeResnet(LanguageGraspModel):
         x = self.res4(x)
         x = self.res5(x)
 
-        print(x.data.shape)
-        raise
-
         # Encode text
         device = x.device
         y_feats = self._encode_text(query, device=device)
