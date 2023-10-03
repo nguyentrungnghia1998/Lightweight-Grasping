@@ -118,9 +118,11 @@ class CLIPFusion(LanguageGraspModel):
         grasp_feat = self.encode_grasp(predicted_grasp)
         grasp_feat = grasp_feat.permute(1, 0, 2)
 
-        pos_bboxes = self.pos_projection(pos_bboxes)
-        bbox_pos_feat = self.encode_bbox_pos(pos_bboxes)
-        bbox_pos_feat = bbox_pos_feat.permute(1, 0, 2)
+        # pos_bboxes = self.pos_projection(pos_bboxes)
+        # bbox_pos_feat = self.encode_bbox_pos(pos_bboxes)
+        # bbox_pos_feat = bbox_pos_feat.permute(1, 0, 2)
+
+        bbox_pos_feat = torch.zeros(1, grasp_feat.shape[1], 3136).cuda()
 
         text_features = self.text_embedding(text_features.float())
         text_features = text_features.unsqueeze(1).permute(1, 0, 2)
