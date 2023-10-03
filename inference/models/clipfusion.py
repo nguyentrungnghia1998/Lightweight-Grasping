@@ -22,9 +22,9 @@ class CLIPFusion(LanguageGraspModel):
         self.grasp_embbedding = nn.Sequential(
                                 nn.Linear(grasp_dim, 256),
                                 nn.ReLU(),
-                                nn.Linear(256, width),
+                                nn.Linear(256, 1024),
                                 nn.ReLU(),
-                                nn.Linear(width, width)
+                                nn.Linear(1024, width)
                                 ).to(self.device)
 
         self.pos_projection, pos_proj_dim = get_embedder(multires=5, input_dim=3)
@@ -32,15 +32,17 @@ class CLIPFusion(LanguageGraspModel):
         self.bbox_pos_embbedding = nn.Sequential(
                                 nn.Linear(pos_proj_dim, 256),
                                 nn.GELU(),
-                                nn.Linear(256, width),
+                                nn.Linear(256, 1024),
                                 nn.GELU(),
-                                nn.Linear(width, width)
+                                nn.Linear(1024, width)
                                 ).to(self.device)
         
         self.text_embedding = nn.Sequential(
-            nn.Linear(512, 256),
+            nn.Linear(512, 1024),
             nn.GELU(),
-            nn.Linear(256, width),
+            nn.Linear(1024, 2048),
+            nn.GELU(),
+            nn.Linear(2048, width),
             nn.GELU(),
             nn.Linear(width, width)
         ).to(self.device)
