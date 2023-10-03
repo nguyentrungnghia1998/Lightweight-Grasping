@@ -130,9 +130,8 @@ class CLIPFusion(LanguageGraspModel):
         cross_feat, attn_weights = self.cross_attn(q=grasp_feat.float(), k=bbox_pos_feat.float(), v=text_features.float())
 
         # cross_feat = self.conv_upsampling(cross_feat)
-        cross_feat = cross_feat.view(-1, 1, 56, 56)
-        cross_feat = self.upsampling_layer(cross_feat.view(-1, 1))
-        x = cross_feat.view(-1, 128, 56, 56)
+        cross_feat = cross_feat.view(-1, 1, 56, 56).repeat(1, 128, 1, 1)
+        x = cross_feat
 
         x = F.relu(self.bn4(self.conv4(x)))
         x = F.relu(self.bn5(self.conv5(x)))
