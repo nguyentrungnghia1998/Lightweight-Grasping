@@ -13,7 +13,7 @@ from inference.models.grasp_model import LanguageGraspModel
 
 
 class CLIPFusion(LanguageGraspModel):
-    def __init__(self, input_channels=4, output_channels=1, channel_size=32, dropout=False, prob=0.0, grasp_dim: int=5, width: int=256, layers: int=6, heads: int=8):
+    def __init__(self, input_channels=4, output_channels=1, channel_size=32, dropout=False, prob=0.0, grasp_dim: int=5, width: int=3136, layers: int=6, heads: int=8):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         super().__init__()
         self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
@@ -31,35 +31,35 @@ class CLIPFusion(LanguageGraspModel):
         
         self.bbox_pos_embbedding = nn.Sequential(
                                 nn.Linear(pos_proj_dim, 256),
-                                nn.ReLU(),
+                                nn.GELU(),
                                 nn.Linear(256, width),
-                                nn.ReLU(),
+                                nn.GELU(),
                                 nn.Linear(width, width)
                                 ).to(self.device)
         
         self.text_embedding = nn.Sequential(
             nn.Linear(512, 256),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(256, width),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(width, width)
         ).to(self.device)
 
         # Reshaped cosine layers
         self.conv_upsampling = nn.Sequential(
             nn.Linear(256, 1024),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(1024, 2048),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(2048, 3136)
         )
 
         # Reshaped linear layers
         self.upsampling_layer = nn.Sequential(
             nn.Linear(1, 64),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Linear(64, 128),
-            nn.ReLU()
+            nn.GELU()
         )
 
         self.conv4 = nn.ConvTranspose2d(channel_size * 4, channel_size * 2, kernel_size=4, stride=2, padding=1,
@@ -125,7 +125,7 @@ class CLIPFusion(LanguageGraspModel):
 
         cross_feat, attn_weights = self.cross_attn(q=grasp_feat.float(), k=bbox_pos_feat.float(), v=text_features.float())
 
-        cross_feat = self.conv_upsampling(cross_feat)
+        # cross_feat = self.conv_upsampling(cross_feat)
         cross_feat = cross_feat.view(-1, 1, 56, 56)
         cross_feat = self.upsampling_layer(cross_feat.view(-1, 1))
         x = cross_feat.view(-1, 128, 56, 56)
