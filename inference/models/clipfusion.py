@@ -94,7 +94,7 @@ class CLIPFusion(LanguageGraspModel):
         self.ragt_model.load_state_dict(torch.load(_default_weight_path))
         self.ragt_model.eval()
         for param in self.ragt_model.parameters():
-            param.requires_grad = True
+            param.requires_grad = False
 
 
     def encode_grasp(self, x):
