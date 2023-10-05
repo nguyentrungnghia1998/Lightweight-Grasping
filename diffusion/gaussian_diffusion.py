@@ -230,7 +230,7 @@ class GaussianDiffusion:
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
     def p_mean_variance(
-        self, model, x, img, t, text, alpha, idx, clip_denoised=True, denoised_fn=None, model_kwargs=None
+        self, model, x, t,  img, text, alpha, idx, clip_denoised=True, denoised_fn=None, model_kwargs=None
     ):
         """
         Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
@@ -396,9 +396,9 @@ class GaussianDiffusion:
         self,
         model,
         x,
-        img,
         gt,
         t,
+        img,
         text,
         alpha,
         idx,
@@ -427,9 +427,8 @@ class GaussianDiffusion:
         out = self.p_mean_variance(
             model,
             x,
-            img,
-            gt,
             t,
+            img,
             text,
             alpha,
             idx,
@@ -453,6 +452,7 @@ class GaussianDiffusion:
         model,
         shape,
         gt,
+        img,
         text,
         alpha,
         idx,
@@ -486,9 +486,9 @@ class GaussianDiffusion:
         final = None
         for sample in self.p_sample_loop_progressive(
             model,
-            x,
             gt,
             shape,
+            img,
             text,
             alpha,
             idx,
@@ -506,9 +506,9 @@ class GaussianDiffusion:
     def p_sample_loop_progressive(
         self,
         model,
-        x,
         gt,
         shape,
+        image,
         text,
         alpha,
         idx,
@@ -549,9 +549,9 @@ class GaussianDiffusion:
                 out = self.p_sample(
                     model,
                     img,
-                    x,
                     gt,
                     t,
+                    image,
                     text,
                     alpha,
                     idx,
