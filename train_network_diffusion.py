@@ -129,10 +129,13 @@ def validate(net, diffusion, schedule_sampler, device, val_data, iou_threshold):
                 net,
                 yc.shape,
                 yc,
+                img,
                 query,
                 alpha,
                 idx,
             )
+
+            print(sample)
             
             lossd = net.compute_loss(yc)
             loss = lossd['loss']
