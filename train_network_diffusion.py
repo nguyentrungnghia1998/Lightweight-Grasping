@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import functools
 
 import cv2
 import numpy as np
@@ -11,7 +12,11 @@ import tensorboardX
 import torch
 import torch.optim as optim
 import torch.utils.data
+from torch.optim import AdamW
 from torchsummary import summary
+
+from diffusion.resample import create_named_schedule_sampler
+from diffusion.fp16_util import MixedPrecisionTrainer
 
 from hardware.device import get_device
 from inference.models import get_network
@@ -19,6 +24,7 @@ from inference.post_process import post_process_output
 from utils.data import get_dataset
 from utils.dataset_processing import evaluation
 from utils.visualisation.gridshow import gridshow
+from utils.model_util import create_diffusion
 
 
 def parse_args():
@@ -84,7 +90,7 @@ def parse_args():
     return args
 
 
-def validate(net, device, val_data, iou_threshold):
+def validate(net, diffusion, schedule_sampler, device, val_data, iou_threshold):
     """
     Run validation.
     :param net: Network
@@ -94,6 +100,10 @@ def validate(net, device, val_data, iou_threshold):
     :return: Successes, Failures and Losses
     """
     net.eval()
+
+    sample_fn = (
+            diffusion.p_sample_loop
+    )
 
     results = {
         'correct': 0,
@@ -108,10 +118,23 @@ def validate(net, device, val_data, iou_threshold):
 
     with torch.no_grad():
         for x, y, didx, rot, zoom_factor, prompt, query in val_data:
-            xc = x.to(device)
+            img = x.to(device)
             yc = [yy.to(device) for yy in y]
-            lossd = net.compute_loss(xc, yc, prompt, query)
+            yc = torch.cat(yc, dim=1)
 
+            alpha = 0.4
+            idx = torch.zeros(img.shape[0]).to(device)
+
+            sample = sample_fn(
+                net,
+                yc.shape,
+                yc,
+                query,
+                alpha,
+                idx,
+            )
+            
+            lossd = net.compute_loss(yc)
             loss = lossd['loss']
 
             results['loss'] += loss.item() / ld
@@ -139,7 +162,7 @@ def validate(net, device, val_data, iou_threshold):
     return results
 
 
-def train(epoch, net, device, train_data, optimizer, batches_per_epoch, vis=False):
+def train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer, batches_per_epoch, vis=False):
     """
     Run one training epoch
     :param epoch: Current epoch
@@ -157,7 +180,23 @@ def train(epoch, net, device, train_data, optimizer, batches_per_epoch, vis=Fals
         }
     }
 
+    use_fp16 = False
+    fp16_scale_growth = 1e-3
+    mp_trainer = MixedPrecisionTrainer(
+            model=net,
+            use_fp16=use_fp16,
+            fp16_scale_growth=fp16_scale_growth,
+    )
+    optimizer = AdamW(
+        mp_trainer.master_params, lr=1e-3
+    )
+
     net.train()
+
+    # Setup for DDPM
+    sample_fn = (
+            diffusion.p_sample_loop
+        )
 
     batch_idx = 0
     # Use batches per epoch to make training on different sized datasets (cornell/jacquard) more equivalent.
@@ -167,43 +206,46 @@ def train(epoch, net, device, train_data, optimizer, batches_per_epoch, vis=Fals
             if batch_idx >= batches_per_epoch:
                 break
 
-            xc = x.to(device)
+            img = x.to(device)
             yc = [yy.to(device) for yy in y]
+            yc = torch.cat(yc, dim=1)
+
             if epoch>0:
                 alpha = 0.4
             else:
                 alpha = 0.4*min(1,batch_idx/len(train_data))
-            idx = torch.zeros(xc.shape[0]).to(device)
-            lossd = net.compute_loss(xc, yc, prompt, query, alpha, idx)
+            idx = torch.zeros(img.shape[0]).to(device)
+            t, weights = schedule_sampler.sample(img.shape[0], device)
 
-            loss = lossd['loss']
+            # Calculate loss
+            compute_losses = functools.partial(
+                diffusion.training_losses,
+                net,
+                yc,
+                img,
+                t,  # [bs](int) sampled timesteps
+                query,
+                alpha,
+                idx,
+            )
+            losses = compute_losses()
+            loss = (losses["loss"] * weights).mean()
+
+            # Backward loss
+            mp_trainer.backward(loss)
+            mp_trainer.optimize(optimizer)
+
+            lossd = net.compute_loss(yc)
 
             if batch_idx % 100 == 0:
-                logging.info('Epoch: {}, Batch: {}, Loss: {:0.4f}'.format(epoch, batch_idx, loss.item()))
+                logging.info('Epoch: {}, Batch: {}, Loss: {:0.4f}'.format(epoch, batch_idx, loss.mean().item()))
 
-            results['loss'] += loss.item()
+            results['loss'] += loss['loss'].mean().item()
             for ln, l in lossd['losses'].items():
                 if ln not in results['losses']:
                     results['losses'][ln] = 0
                 results['losses'][ln] += l.item()
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            # Display the images
-            if vis:
-                imgs = []
-                n_img = min(4, x.shape[0])
-                for idx in range(n_img):
-                    imgs.extend([x[idx,].numpy().squeeze()] + [yi[idx,].numpy().squeeze() for yi in y] + [
-                        x[idx,].numpy().squeeze()] + [pc[idx,].detach().cpu().numpy().squeeze() for pc in
-                                                      lossd['pred'].values()])
-                gridshow('Display', imgs,
-                         [(xc.min().item(), xc.max().item()), (0.0, 1.0), (0.0, 1.0), (-1.0, 1.0),
-                          (0.0, 1.0)] * 2 * n_img,
-                         [cv2.COLORMAP_BONE] * 10 * n_img, 10)
-                cv2.waitKey(2)
 
     results['loss'] /= batch_idx
     for l in results['losses']:
@@ -295,6 +337,8 @@ def run():
     logging.info('Loading Network...')
     input_channels = 1 * args.use_depth + 3 * args.use_rgb
     network = get_network(args.network)
+    diffusion = create_diffusion()
+    schedule_sampler = create_named_schedule_sampler('uniform', diffusion)
     net = network(
         input_channels=input_channels,
         dropout=args.use_dropout,
@@ -323,7 +367,7 @@ def run():
     best_iou = 0.0
     for epoch in range(args.epochs):
         logging.info('Beginning Epoch {:02d}'.format(epoch))
-        train_results = train(epoch, net, device, train_data, optimizer, args.batches_per_epoch, vis=args.vis)
+        train_results = train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer, args.batches_per_epoch, vis=args.vis)
 
         # Log training losses to tensorboard
         tb.add_scalar('loss/train_loss', train_results['loss'], epoch)
@@ -332,7 +376,7 @@ def run():
 
         # Run Validation
         logging.info('Validating...')
-        test_results = validate(net, device, val_data, args.iou_threshold)
+        test_results = validate(net, diffusion, schedule_sampler, device, val_data, args.iou_threshold)
         logging.info('%d/%d = %f' % (test_results['correct'], test_results['correct'] + test_results['failed'],
                                      test_results['correct'] / (test_results['correct'] + test_results['failed'])))
 

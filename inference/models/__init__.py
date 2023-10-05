@@ -34,5 +34,8 @@ def get_network(network_name):
     elif network_name == 'clipfusion':
         from .clipfusion import CLIPFusion
         return CLIPFusion
+    elif network_name == 'lgdm':
+        from .lgdm.network import LGDM
+        return LGDM
     else:
         raise NotImplementedError('Network {} is not implemented'.format(network_name))
