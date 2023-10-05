@@ -119,11 +119,15 @@ class LGDM(LanguageGraspModel):
         model_output = torch.cat([pos_denoise, cos_denoise, sin_denoise, width_denoise], dim=1)
         return model_output
 
-    def compute_loss(self, yc):
+    def compute_loss(self, yc, sample=None):
         y_pos, y_cos, y_sin, y_width = yc[:, 0], yc[:, 1], yc[:, 2], yc[:, 3]
         y_pos, y_cos, y_sin, y_width = y_pos.unsqueeze(1), y_cos.unsqueeze(1), y_sin.unsqueeze(1), y_width.unsqueeze(1)
 
-        pos_pred, cos_pred, sin_pred, width_pred = self.pos_output_str, self.cos_output_str, self.sin_output_str, self.width_output_str
+        if sample is None:
+            pos_pred, cos_pred, sin_pred, width_pred = self.pos_output_str, self.cos_output_str, self.sin_output_str, self.width_output_str
+        else:
+            pos_pred, cos_pred, sin_pred, width_pred = sample[:, 0], sample[:, 1], sample[:, 2], sample[:, 3]
+            pos_pred, cos_pred, sin_pred, width_pred = pos_pred.unsqueeze(1), cos_pred.unsqueeze(1), sin_pred.unsqueeze(1), width_pred.unsqueeze(1)
 
         p_loss = F.mse_loss(pos_pred, y_pos)
         cos_loss = F.mse_loss(cos_pred, y_cos)

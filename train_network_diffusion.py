@@ -135,9 +135,7 @@ def validate(net, diffusion, schedule_sampler, device, val_data, iou_threshold):
                 idx,
             )
 
-            print(sample)
-            
-            lossd = net.compute_loss(yc)
+            lossd = net.compute_loss(yc, sample)
             loss = lossd['loss']
 
             results['loss'] += loss.item() / ld

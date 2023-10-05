@@ -29,7 +29,7 @@ class GraspAnythingDataset(LanguageGraspDatasetBase):
 
         if kwargs["seen"]:
             with open(os.path.join('split/grasp-anything/seen.obj'), 'rb') as f:
-                idxs = pickle.load(f)[:100]
+                idxs = pickle.load(f)
 
             self.grasp_files = list(filter(lambda x: x.split('/')[-1].split('.')[0] in idxs, self.grasp_files))
         else:
