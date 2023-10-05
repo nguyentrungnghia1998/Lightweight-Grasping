@@ -240,7 +240,7 @@ def train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer
             if batch_idx % 100 == 0:
                 logging.info('Epoch: {}, Batch: {}, Loss: {:0.4f}'.format(epoch, batch_idx, loss.mean().item()))
 
-            results['loss'] += loss['loss'].mean().item()
+            results['loss'] += loss
             for ln, l in lossd['losses'].items():
                 if ln not in results['losses']:
                     results['losses'][ln] = 0
