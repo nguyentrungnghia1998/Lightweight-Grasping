@@ -120,15 +120,15 @@ def validate(net, diffusion, schedule_sampler, device, val_data, iou_threshold):
         for x, y, didx, rot, zoom_factor, prompt, query in val_data:
             img = x.to(device)
             yc = [yy.to(device) for yy in y]
-            yc = torch.cat(yc, dim=1)
+            pos_gt = yc[0]
 
             alpha = 0.4
             idx = torch.zeros(img.shape[0]).to(device)
 
             sample = sample_fn(
                 net,
-                yc.shape,
-                yc,
+                pos_gt.shape,
+                pos_gt,
                 img,
                 query,
                 alpha,
@@ -209,7 +209,7 @@ def train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer
 
             img = x.to(device)
             yc = [yy.to(device) for yy in y]
-            yc = torch.cat(yc, dim=1)
+            pos_gt = yc[0]
 
             if epoch>0:
                 alpha = 0.4
@@ -222,7 +222,7 @@ def train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer
             compute_losses = functools.partial(
                 diffusion.training_losses,
                 net,
-                yc,
+                pos_gt,
                 img,
                 t,  # [bs](int) sampled timesteps
                 query,

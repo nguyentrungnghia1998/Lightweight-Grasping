@@ -106,18 +106,11 @@ class LGDM(LanguageGraspModel):
         width_output = self.width_output(img)
 
         # Combine noise features from forward process to the guiding region
-        pos_denoise, cos_denoise, sin_denoise, width_denoise = x[:,0], x[:,1], x[:,2], x[:,3]
-        pos_denoise, cos_denoise, sin_denoise, width_denoise = pos_denoise.unsqueeze(1), cos_denoise.unsqueeze(1), sin_denoise.unsqueeze(1), width_denoise.unsqueeze(1)
-
-        pos_denoise = pos_denoise.clone().detach() + pos_output
-        cos_denoise = cos_denoise.clone().detach() + cos_output
-        sin_denoise = sin_denoise.clone().detach() + sin_output
-        width_denoise = width_denoise.clone().detach() + width_output
+        pos_output = x + pos_output
 
         self.pos_output_str, self.cos_output_str, self.sin_output_str, self.width_output_str = pos_output.detach(), cos_output.detach(), sin_output.detach(), width_output.detach()
 
-        model_output = torch.cat([pos_denoise, cos_denoise, sin_denoise, width_denoise], dim=1)
-        return model_output
+        return pos_output
 
     def compute_loss(self, yc, sample=None):
         y_pos, y_cos, y_sin, y_width = yc[:, 0], yc[:, 1], yc[:, 2], yc[:, 3]
