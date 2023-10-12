@@ -147,7 +147,7 @@ class LGDM(LanguageGraspModel):
         width_loss = F.mse_loss(width_pred, y_width)
 
         # Get contrastive loss
-        contr_loss = self._get_contrastive_loss(self.full_image_atts, y_pos)
+        contr_loss = self._get_contrastive_loss(self.full_image_atts.to(y_pos.device), y_pos)
 
         return {
             'loss': p_loss + cos_loss + sin_loss + width_loss,
