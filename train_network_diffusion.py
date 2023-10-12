@@ -233,12 +233,12 @@ def train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer
             loss = (losses["loss"] * weights).mean()
 
             # Backward loss
-            # mp_trainer.backward(loss)
-            # mp_trainer.optimize(optimizer)
+            mp_trainer.backward(loss)
+            mp_trainer.optimize(optimizer)
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            # optimizer.zero_grad()
+            # loss.backward()
+            # optimizer.step()
 
             lossd = net.compute_loss(yc)
 
