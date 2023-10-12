@@ -84,7 +84,9 @@ class LGDM(LanguageGraspModel):
         # Encode text
         device = img.device
         text_input = self.tokenizer(query, padding='longest', max_length=30, return_tensors="pt").to(device)  
-        y = self.albef(img, text_input, alpha, idx)
+        image_atts, y = self.albef(img, text_input, alpha, idx)
+        self.full_image_atts = self._process_attention_mask(image_atts=image_atts)
+        
         y = y.sum(dim=1).unsqueeze(1)
         y = self.y_flatten(y)
         y = y.view(-1, 8, 19, 19)
@@ -112,6 +114,24 @@ class LGDM(LanguageGraspModel):
 
         return pos_output
 
+    def _process_attention_mask(self, image_atts):
+        bs, _ = image_atts.data.shape
+        W, H, w, h = 224, 224, 14, 14
+        ps = W // w
+        image_atts = image_atts[:, 1:].view(-1, w, h)
+
+        # Initialize the larger tensor (224x224) with zeros
+        full_image_atts = torch.zeros(bs, W, H)
+
+        # Iterate through the smaller tensor and fill the corresponding 16x16 blocks
+        for i in range(bs):  # Loop through each channel
+            for j in range(w):  # Loop through each row in the smaller tensor
+                for k in range(h):  # Loop through each column in the smaller tensor
+                    # Fill the 16x16 block with the value from the smaller tensor
+                    full_image_atts[i, j*16:(j+1)*16, k*16:(k+1)*16] = image_atts[i, j, k]
+        
+        return full_image_atts
+
     def compute_loss(self, yc, sample=None):
         y_pos, y_cos, y_sin, y_width = yc[0], yc[1], yc[2], yc[3]
 
@@ -126,13 +146,17 @@ class LGDM(LanguageGraspModel):
         sin_loss = F.mse_loss(sin_pred, y_sin)
         width_loss = F.mse_loss(width_pred, y_width)
 
+        # Get contrastive loss
+        contr_loss = self._get_contrastive_loss(self.full_image_atts, y_pos)
+
         return {
             'loss': p_loss + cos_loss + sin_loss + width_loss,
             'losses': {
                 'p_loss': p_loss,
                 'cos_loss': cos_loss,
                 'sin_loss': sin_loss,
-                'width_loss': width_loss
+                'width_loss': width_loss,
+                'contr_loss': contr_loss,
             },
             'pred': {
                 'pos': pos_pred,
@@ -141,6 +165,19 @@ class LGDM(LanguageGraspModel):
                 'width': width_pred
             }
         }
+    
+    def _get_contrastive_loss(self, x, y, temperature=1.0):
+        # Normalize the vectors along the channel dimension
+        x = F.normalize(x, dim=0, p=2)
+        y = F.normalize(y, dim=0, p=2)
+        
+        # Compute cosine similarity
+        similarity = F.cosine_similarity(x, y, dim=0) / temperature
+        
+        # Contrastive loss
+        contrastive_loss = -torch.log(torch.exp(similarity) / torch.sum(torch.exp(similarity), dim=0))
+        
+        return torch.mean(contrastive_loss)
 
     def _load_and_freeze_clip(self, clip_version, device=None):
         clip_model, clip_preprocess = clip.load(clip_version, device=device,

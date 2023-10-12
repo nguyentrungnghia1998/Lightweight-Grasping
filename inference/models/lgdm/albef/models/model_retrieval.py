@@ -115,7 +115,7 @@ class ALBEF(nn.Module):
                                         return_dict = True,
                                         mode = 'fusion',
                                        )
-        return output_pos.last_hidden_state
+        return image_atts, output_pos.last_hidden_state
 
     @torch.no_grad()    
     def copy_params(self):
