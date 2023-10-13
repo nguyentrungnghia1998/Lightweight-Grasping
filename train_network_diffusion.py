@@ -31,7 +31,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train network')
 
     # Network
-    parser.add_argument('--network', type=str, default='lgrconvnet3',
+    parser.add_argument('--network', type=str, default='lgdm',
                         help='Network name in inference/models')
     parser.add_argument('--input-size', type=int, default=224,
                         help='Input image size for the network')
@@ -125,15 +125,17 @@ def validate(net, diffusion, schedule_sampler, device, val_data, iou_threshold):
             alpha = 0.4
             idx = torch.zeros(img.shape[0]).to(device)
 
-            sample = sample_fn(
-                net,
-                pos_gt.shape,
-                pos_gt,
-                img,
-                query,
-                alpha,
-                idx,
-            )
+            sample = net(None, img, None, query, alpha, idx)
+
+            # sample = sample_fn(
+            #     net,
+            #     pos_gt.shape,
+            #     pos_gt,
+            #     img,
+            #     query,
+            #     alpha,
+            #     idx,
+            # )
 
             lossd = net.compute_loss(yc, sample)
             loss = lossd['loss']
