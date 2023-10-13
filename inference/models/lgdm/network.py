@@ -151,7 +151,7 @@ class LGDM(LanguageGraspModel):
         contr_loss = self._get_contrastive_loss(self.full_image_atts.to(y_pos.device), y_pos)
 
         return {
-            'loss': p_loss + cos_loss + sin_loss + width_loss + contr_loss,
+            'loss': p_loss + cos_loss + sin_loss + width_loss,
             'losses': {
                 'p_loss': p_loss,
                 'cos_loss': cos_loss,
