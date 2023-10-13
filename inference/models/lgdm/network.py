@@ -133,14 +133,14 @@ class LGDM(LanguageGraspModel):
         
         return full_image_atts
 
-    def compute_loss(self, yc, pos_output, cos_output, sin_output, width_output):
+    def compute_loss(self, yc, pos_pred, cos_pred, sin_pred, width_pred):
         y_pos, y_cos, y_sin, y_width = yc[0], yc[1], yc[2], yc[3]
 
-        if sample is None:
-            pos_pred, cos_pred, sin_pred, width_pred = self.pos_output_str, self.cos_output_str, self.sin_output_str, self.width_output_str
-        else:
-            pos_pred = sample
-            cos_pred, sin_pred, width_pred = self.cos_output_str, self.sin_output_str, self.width_output_str
+        # if sample is None:
+        #     pos_pred, cos_pred, sin_pred, width_pred = self.pos_output_str, self.cos_output_str, self.sin_output_str, self.width_output_str
+        # else:
+        #     pos_pred = sample
+        #     cos_pred, sin_pred, width_pred = self.cos_output_str, self.sin_output_str, self.width_output_str
 
         p_loss = F.mse_loss(pos_pred, y_pos)
         cos_loss = F.mse_loss(cos_pred, y_cos)
