@@ -121,7 +121,7 @@ class LGDM(LanguageGraspModel):
         image_atts = image_atts[:, 1:].view(-1, w, h)
 
         # Initialize the larger tensor (224x224) with zeros
-        full_image_atts = torch.zeros(bs, W, H)
+        full_image_atts = torch.zeros(bs, W, H, requires_grad=True)
 
         # Iterate through the smaller tensor and fill the corresponding 16x16 blocks
         for i in range(bs):  # Loop through each channel
