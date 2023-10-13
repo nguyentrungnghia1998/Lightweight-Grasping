@@ -118,7 +118,7 @@ class LGDM(LanguageGraspModel):
         bs, _ = image_atts.data.shape
         W, H, w, h = 224, 224, 14, 14
         ps = W // w
-        image_atts = image_atts[:, 1:].view(-1, w, h)
+        image_atts = image_atts[:, 1:].view(-1, w, h).float()
         image_atts.requires_grad = True
 
         # Initialize the larger tensor (224x224) with zeros
