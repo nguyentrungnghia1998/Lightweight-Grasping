@@ -235,14 +235,11 @@ def train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer
             loss = (losses["loss"] * weights).mean()
 
             # Backward loss
-            mp_trainer.backward(loss)
-            mp_trainer.optimize(optimizer)
-
-            # optimizer.zero_grad()
-            # loss.backward()
-            # optimizer.step()
+            # mp_trainer.backward(loss)
+            # mp_trainer.optimize(optimizer)
 
             lossd = net.compute_loss(yc)
+            loss = lossd['loss']
 
             if batch_idx % 100 == 0:
                 logging.info('Epoch: {}, Batch: {}, Loss: {:0.4f}'.format(epoch, batch_idx, loss.mean().item()))
@@ -253,6 +250,9 @@ def train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer
                     results['losses'][ln] = 0
                 results['losses'][ln] += l.item()
 
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
     results['loss'] /= batch_idx
     for l in results['losses']:
