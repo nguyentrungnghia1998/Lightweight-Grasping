@@ -112,7 +112,7 @@ class LGDM(LanguageGraspModel):
 
         self.pos_output_str, self.cos_output_str, self.sin_output_str, self.width_output_str = pos_output, cos_output, sin_output, width_output
 
-        return pos_output
+        return pos_output, cos_output, sin_output, width_output
 
     def _process_attention_mask(self, image_atts):
         bs, _ = image_atts.data.shape
@@ -133,7 +133,7 @@ class LGDM(LanguageGraspModel):
         
         return full_image_atts
 
-    def compute_loss(self, yc, sample=None):
+    def compute_loss(self, yc, pos_output, cos_output, sin_output, width_output):
         y_pos, y_cos, y_sin, y_width = yc[0], yc[1], yc[2], yc[3]
 
         if sample is None:

@@ -125,7 +125,7 @@ def validate(net, diffusion, schedule_sampler, device, val_data, iou_threshold):
             alpha = 0.4
             idx = torch.zeros(img.shape[0]).to(device)
 
-            sample = net(None, img, None, query, alpha, idx)
+            pos_output, cos_output, sin_output, width_output = net(None, img, None, query, alpha, idx)
 
             # sample = sample_fn(
             #     net,
@@ -137,7 +137,7 @@ def validate(net, diffusion, schedule_sampler, device, val_data, iou_threshold):
             #     idx,
             # )
 
-            lossd = net.compute_loss(yc, sample)
+            lossd = net.compute_loss(yc, pos_output, cos_output, sin_output, width_output)
             loss = lossd['loss']
 
             results['loss'] += loss.item() / ld
@@ -221,24 +221,26 @@ def train(epoch, net, diffusion, schedule_sampler, device, train_data, optimizer
             t, weights = schedule_sampler.sample(img.shape[0], device)
 
             # Calculate loss
-            compute_losses = functools.partial(
-                diffusion.training_losses,
-                net,
-                pos_gt,
-                img,
-                t,  # [bs](int) sampled timesteps
-                query,
-                alpha,
-                idx,
-            )
-            losses = compute_losses()
-            loss = (losses["loss"] * weights).mean()
+            # compute_losses = functools.partial(
+            #     diffusion.training_losses,
+            #     net,
+            #     pos_gt,
+            #     img,
+            #     t,  # [bs](int) sampled timesteps
+            #     query,
+            #     alpha,
+            #     idx,
+            # )
+            # losses = compute_losses()
+            # loss = (losses["loss"] * weights).mean()
+
+            pos_output, cos_output, sin_output, width_output = net(None, img, None, query, alpha, idx)
 
             # Backward loss
             # mp_trainer.backward(loss)
             # mp_trainer.optimize(optimizer)
 
-            lossd = net.compute_loss(yc)
+            lossd = net.compute_loss(yc, pos_output, cos_output, sin_output, width_output)
             loss = lossd['loss']
 
             if batch_idx % 100 == 0:
