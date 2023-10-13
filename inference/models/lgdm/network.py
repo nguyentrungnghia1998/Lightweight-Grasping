@@ -110,7 +110,7 @@ class LGDM(LanguageGraspModel):
         # Combine noise features from forward process to the guiding region
         # pos_output = x + pos_output
 
-        self.pos_output_str, self.cos_output_str, self.sin_output_str, self.width_output_str = pos_output.detach(), cos_output.detach(), sin_output.detach(), width_output.detach()
+        self.pos_output_str, self.cos_output_str, self.sin_output_str, self.width_output_str = pos_output, cos_output, sin_output, width_output
 
         return pos_output
 
@@ -148,7 +148,7 @@ class LGDM(LanguageGraspModel):
         width_loss = F.mse_loss(width_pred, y_width)
 
         # Get contrastive loss
-        contr_loss = self._get_contrastive_loss(self.full_image_atts.to(y_pos.device), y_pos)
+        # contr_loss = self._get_contrastive_loss(self.full_image_atts.to(y_pos.device), y_pos)
 
         return {
             'loss': p_loss + cos_loss + sin_loss + width_loss,
