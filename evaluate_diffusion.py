@@ -153,8 +153,8 @@ if __name__ == '__main__':
                 alpha = 0.4
                 idx = torch.zeros(img.shape[0]).to(device)
 
-                sample = net(None, img, None, query, alpha, idx)
-                lossd = net.compute_loss(yc, sample)
+                pos_output, cos_output, sin_output, width_output = net(None, img, None, query, alpha, idx)
+                lossd = net.compute_loss(yc, pos_output, cos_output, sin_output, width_output)
 
                 q_img, ang_img, width_img = post_process_output(lossd['pred']['pos'], lossd['pred']['cos'],
                                                                 lossd['pred']['sin'], lossd['pred']['width'])
