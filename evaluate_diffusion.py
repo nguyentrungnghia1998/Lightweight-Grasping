@@ -146,7 +146,7 @@ if __name__ == '__main__':
         start_time = time.time()
 
         with torch.no_grad():
-            for idx, (x, y, didx, rot, zoom_factor, prompt, query) in enumerate(test_data):
+            for idx, (x, y, didx, rot, zoom, prompt, query) in enumerate(test_data):
                 img = x.to(device)
                 yc = [yi.to(device) for yi in y]
 
