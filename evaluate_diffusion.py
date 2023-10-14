@@ -10,6 +10,7 @@ from inference.post_process import post_process_output
 from utils.data import get_dataset
 from utils.dataset_processing import evaluation, grasp
 from utils.visualisation.plot import save_results
+import inference.models.lgdm.albef.utils as utils
 
 logging.basicConfig(level=logging.INFO)
 
@@ -73,7 +74,28 @@ def parse_args():
     return args
 
 
+def _init_process():
+    class WrapperArgument:
+            def __init__(self):
+                pass
+
+            def add_attribute(self, name, value):
+                setattr(self, name, value)
+
+    args = WrapperArgument()
+    args.config = 'inference/models/lgdm/albef/configs/Grounding.yaml'
+    args.gradcam_mode = 'itm'
+    args.block_num = 8
+    args.text_encoder = 'bert-base-uncased'
+    args.device = 'cuda'
+    args.world_size = 1
+    args.dist_url = 'env://'
+    args.distributed = True
+
+    utils.init_distributed_mode(args)
+
 if __name__ == '__main__':
+    _init_process()
     args = parse_args()
 
     # Get the compute device
