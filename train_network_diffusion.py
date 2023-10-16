@@ -123,7 +123,7 @@ def validate(net, diffusion, schedule_sampler, device, val_data, iou_threshold):
             pos_gt = yc[0]
 
             alpha = 0.4
-            idx = torch.zeros(img.shape[0]).to(device)
+            idx = torch.ones(img.shape[0]).to(device)
 
             pos_output, cos_output, sin_output, width_output = net(None, img, None, query, alpha, idx)
 
