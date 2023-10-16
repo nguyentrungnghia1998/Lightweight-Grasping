@@ -85,18 +85,22 @@ class LGDM(LanguageGraspModel):
         device = img.device
         text_input = self.tokenizer(query, padding='longest', max_length=30, return_tensors="pt").to(device)  
         image_atts, y = self.albef(img, text_input, alpha, idx)
-        self.full_image_atts = self._process_attention_mask(image_atts=image_atts)
+        self.full_image_atts = self._process_attention_mask(image_atts=image_atts).to(device)
+        r_channel, g_channel, b_channel = img[:, 0], img[:, 1], img[:, 2]
+        r_channel, g_channel, b_channel = r_channel * self.full_image_atts, g_channel * self.full_image_atts, b_channel * self.full_image_atts
+        r_channel, g_channel, b_channel = r_channel.unsqueeze(1), g_channel.unsqueeze(1), b_channel.unsqueeze(1)
+        img = torch.cat([r_channel, g_channel, b_channel], dim=1)
         
-        y = y.sum(dim=1).unsqueeze(1)
-        y = self.y_flatten(y)
-        y = y.view(-1, 8, 19, 19)
+        # y = y[:, 0].unsqueeze(1)
+        # y = self.y_flatten(y)
+        # y = y.view(-1, 8, 19, 19)
 
         img = F.relu(self.conv1(img))
         img = F.relu(self.conv2(img))
         img = F.relu(self.conv3(img))
 
         # Combine textual features with the visual features
-        img = torch.clone(img).detach() + y
+        # img = torch.clone(img).detach() + y
 
         img = F.relu(self.convt1(img))
         img = F.relu(self.convt2(img))
