@@ -33,10 +33,10 @@ class LGDM(LanguageGraspModel):
         self.y_flatten = nn.Sequential(
             nn.Linear(768, 1024),
             nn.GELU(),
-            nn.Linear(1024, 2048),
+            nn.Linear(1024, 2888),
             nn.GELU(),
-            nn.Linear(2048, 2888),
-            nn.GELU(),
+            # nn.Linear(2048, 2888),
+            # nn.GELU(),
         )
         
         self.pos_output = nn.Conv2d(filter_sizes[5], 1, kernel_size=2)
@@ -91,9 +91,9 @@ class LGDM(LanguageGraspModel):
         r_channel, g_channel, b_channel = r_channel.unsqueeze(1), g_channel.unsqueeze(1), b_channel.unsqueeze(1)
         img = torch.cat([r_channel, g_channel, b_channel], dim=1)
         
-        # y = y[:, 0].unsqueeze(1)
-        # y = self.y_flatten(y)
-        # y = y.view(-1, 8, 19, 19)
+        y = y[:, 0].unsqueeze(1)
+        y = self.y_flatten(y)
+        y = y.view(-1, 8, 19, 19)
 
         img = F.relu(self.conv1(img))
         img = F.relu(self.conv2(img))
