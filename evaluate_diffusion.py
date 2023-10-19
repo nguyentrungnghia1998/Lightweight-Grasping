@@ -63,7 +63,9 @@ def parse_args():
                         help='Random seed for numpy')
     parser.add_argument('--seen', type=int, default=1,
                         help='Flag for using seen classes, only work for Grasp-Anything dataset') 
-
+    parser.add_argument('--add-file-path', type=str, default='data/grasp-anywhere',
+                        help='Specific for Grasp-Anywhere')
+    
     args = parser.parse_args()
 
     if args.jacquard_output and args.dataset != 'jacquard':
@@ -111,7 +113,8 @@ if __name__ == '__main__':
                            random_zoom=args.augment,
                            include_depth=args.use_depth,
                            include_rgb=args.use_rgb,
-                           seen=args.seen)
+                           seen=args.seen,
+                           add_file_path=args.add_file_path)
 
     indices = list(range(test_dataset.length))
     split = int(np.floor(args.split * test_dataset.length))

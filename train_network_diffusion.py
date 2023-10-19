@@ -86,7 +86,8 @@ def parse_args():
     parser.add_argument('--seen', type=int, default=1,
                         help='Flag for using seen classes, only work for Grasp-Anything dataset') 
     parser.add_argument('--add-file-path', type=str, default='data/grasp-anywhere',
-                        help='Log directory')
+                        help='Specific for Grasp-Anywhere')
+    
     args = parser.parse_args()
     return args
 
