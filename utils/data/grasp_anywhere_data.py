@@ -26,6 +26,7 @@ class GraspAnywhereDataset(LanguageGraspDatasetBase):
 
         self.grasp_files = glob.glob(os.path.join(addition_file_path, 'positive_grasp', '*.pt'))
         self.prompt_files = glob.glob(os.path.join(file_path, 'prompt', '*.pkl'))
+        self.prompt_dir = os.path.join(file_path, 'prompt')
         self.rgb_files = glob.glob(os.path.join(file_path, 'image', '*.jpg'))
         self.rgb_dir = os.path.join(file_path, 'image')
         self.mask_files = glob.glob(os.path.join(file_path, 'mask', '*.npy'))
@@ -119,9 +120,12 @@ class GraspAnywhereDataset(LanguageGraspDatasetBase):
         # return rgb_img.img
 
     def get_prompts(self, idx):
-        prompt_file, obj_id, part_id = self.grasp_files[idx].replace("positive_grasp", "prompt").split('_')
+        grasp_file = self.grasp_files[idx].split('/')[-1]
+        prompt_file, obj_id, part_id = grasp_file.split('_')
         prompt_file += '.pkl'
-        obj_id = int(obj_id.split('.')[0])
+        prompt_file = os.path.join(self.prompt_dir, prompt_file)
+        obj_id = int(obj_id.split('.'))
+        part_id = int(part_id.split('.')[0])
 
         with open(prompt_file, 'rb') as f:
             x = pickle.load(f)
