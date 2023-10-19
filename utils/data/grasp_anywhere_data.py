@@ -124,7 +124,7 @@ class GraspAnywhereDataset(LanguageGraspDatasetBase):
         prompt_file, obj_id, part_id = grasp_file.split('_')
         prompt_file += '.pkl'
         prompt_file = os.path.join(self.prompt_dir, prompt_file)
-        obj_id = int(obj_id.split('.'))
+        obj_id = int(obj_id)
         part_id = int(part_id.split('.')[0])
 
         with open(prompt_file, 'rb') as f:
