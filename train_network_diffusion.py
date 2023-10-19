@@ -85,7 +85,8 @@ def parse_args():
                         help='Random seed for numpy')
     parser.add_argument('--seen', type=int, default=1,
                         help='Flag for using seen classes, only work for Grasp-Anything dataset') 
-
+    parser.add_argument('--add-file-path', type=str, default='data/grasp-anywhere',
+                        help='Log directory')
     args = parser.parse_args()
     return args
 
@@ -311,7 +312,8 @@ def run():
                       random_zoom=True,
                       include_depth=args.use_depth,
                       include_rgb=args.use_rgb,
-                      seen=args.seen)
+                      seen=args.seen,
+                      add_file_path=args.add_file_path)
     logging.info('Dataset size is {}'.format(dataset.length))
 
     # Creating data indices for training and validation splits
