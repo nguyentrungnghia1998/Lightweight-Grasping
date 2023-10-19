@@ -27,21 +27,20 @@ class GraspAnywhereDataset(LanguageGraspDatasetBase):
         self.grasp_files = glob.glob(os.path.join(addition_file_path, 'positive_grasp', '*.pt'))
         self.prompt_files = glob.glob(os.path.join(file_path, 'prompt', '*.pkl'))
         self.rgb_files = glob.glob(os.path.join(file_path, 'image', '*.jpg'))
+        self.rgb_dir = os.path.join(file_path, 'image')
         self.mask_files = glob.glob(os.path.join(file_path, 'mask', '*.npy'))
 
         if kwargs["seen"]:
             with open(os.path.join('split/grasp-anything/seen.obj'), 'rb') as f:
                 idxs = pickle.load(f)
-
-            self.grasp_files = list(filter(lambda x: x.split('/')[-1].split('.')[0] in idxs, self.grasp_files))
+            self.grasp_files = list(filter(lambda x: x.split('/')[-1][:-5] in idxs, self.grasp_files))
         else:
             with open(os.path.join('split/grasp-anything/unseen.obj'), 'rb') as f:
                 idxs = pickle.load(f)
 
-            self.grasp_files = list(filter(lambda x: x.split('/')[-1].split('.')[0] in idxs, self.grasp_files))
+            self.grasp_files = list(filter(lambda x: x.split('/')[-1][:-5] in idxs, self.grasp_files))
 
-        print(len(self.grasp_files))
-        raise
+
         self.grasp_files.sort()
         self.prompt_files.sort()
         self.rgb_files.sort()
@@ -92,9 +91,10 @@ class GraspAnywhereDataset(LanguageGraspDatasetBase):
 
     def get_rgb(self, idx, rot=0, zoom=1.0, normalise=True):
         mask_file = self.grasp_files[idx].replace("positive_grasp", "mask").replace(".pt", ".npy")
-        mask_img = mask.Mask.from_file(mask_file)
-        rgb_file = re.sub(r"_\d{1}\.pt", ".jpg", self.grasp_files[idx])
-        rgb_file = rgb_file.replace("positive_grasp", "image")
+        # mask_img = mask.Mask.from_file(mask_file)
+        rgb_file = re.sub(r"_\d{1}_\d{1}\.pt", ".jpg", self.grasp_files[idx])
+        rgb_file = rgb_file.split('/')[-1]
+        rgb_file = os.path.join(self.rgb_dir, rgb_file)
         rgb_img = image.Image.from_file(rgb_file)
         # rgb_img = image.Image.mask_out_image(rgb_img, mask_img)
 
@@ -119,7 +119,7 @@ class GraspAnywhereDataset(LanguageGraspDatasetBase):
         # return rgb_img.img
 
     def get_prompts(self, idx):
-        prompt_file, obj_id = self.grasp_files[idx].replace("positive_grasp", "prompt").split('_')
+        prompt_file, obj_id, part_id = self.grasp_files[idx].replace("positive_grasp", "prompt").split('_')
         prompt_file += '.pkl'
         obj_id = int(obj_id.split('.')[0])
 
